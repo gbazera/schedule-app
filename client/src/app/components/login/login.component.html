@@ -1,13 +1,49 @@
-<div class="form-container container d-flex flex-column justify-content-center align-items-center" style="height: 90vh;">
-    <h3>Login</h3>
-    <form class="d-grid gap-3" style="width: 500px !important;">
-        <div class="form-group">
-            <input type="email" class="form-control" id="email" name="email" placeholder="Email">
-        </div>
-        <div class="form-group">
-            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
-        </div>
-        <button type="submit" class="btn btn-primary">Login</button>
-        <p>Don't have an account? <a [routerLink]="['/register']">Register</a></p>
-    </form>
+<div
+  class="form-container container d-flex flex-column justify-content-center align-items-center"
+  style="height: 90vh;"
+>
+  <h3>Login</h3>
+  <form
+    [formGroup]="loginForm"
+    (ngSubmit)="login()"
+    class="d-grid gap-3"
+    style="width: 500px !important;"
+  >
+    <!-- Email Input -->
+    <div class="form-group">
+      <input
+        type="email"
+        class="form-control"
+        id="email"
+        formControlName="email"
+        placeholder="Email"
+        [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        [class.is-valid]="loginForm.get('email')?.valid && loginForm.get('email')?.touched"
+      />
+      <div class="invalid-feedback">Please provide a valid email address.</div>
+    </div>
+
+    <!-- Password Input -->
+    <div class="form-group">
+      <input
+        type="password"
+        class="form-control"
+        id="password"
+        formControlName="password"
+        placeholder="Password"
+        [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        [class.is-valid]="loginForm.get('password')?.valid && loginForm.get('password')?.touched"
+      />
+      <div class="invalid-feedback">Password is required.</div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid">Login</button>
+
+    <!-- Registration Link -->
+    <p>
+      Don't have an account?
+      <a [routerLink]="['/register']">Register</a>
+    </p>
+  </form>
 </div>

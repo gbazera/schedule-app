@@ -1,30 +1,112 @@
-<div class="form-container container d-flex flex-column justify-content-center align-items-center" style="height: 90vh;">
-    <h3>Register</h3>
-    <form class="d-grid gap-3" style="width: 500px !important;">
-        <div class="form-group">
-            <input type="text" class="form-control" id="firstNname" name="firstName" placeholder="First Name">
-        </div>
-        <div class="form-group">
-            <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Last Name">
-        </div>
-        <div class="form-group">
-            <input type="email" class="form-control" id="email" name="email" placeholder="Email">
-        </div>
-        <div class="form-group">
-            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
-        </div>
-        <div class="form-group">
-            <input type="password" class="form-control" id="password" name="confirmPassword" placeholder="Confirm Password">
-        </div>
-        <div class="form-group">
-            <select class="form-control" id="job">
-                <option value="0" disabled selected>Select a Job</option>
-                <option value="1">Student</option>
-                <option value="2">Teacher</option>
-                <option value="3">Administrator</option>
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Register</button>
-        <p>Already have an account? <a [routerLink]="['/login']">Login</a></p>
-    </form>
+<div
+  class="form-container container d-flex flex-column justify-content-center align-items-center"
+  style="height: 90vh"
+>
+  <h3>Register</h3>
+  <form
+    [formGroup]="registrationForm"
+    (ngSubmit)="register()"
+    class="d-grid gap-3"
+    style="width: 500px !important"
+  >
+    <!-- First Name -->
+    <div class="form-group">
+      <input
+        type="text"
+        class="form-control"
+        id="firstName"
+        formControlName="firstName"
+        placeholder="First Name"
+        [class.is-invalid]="registrationForm.get('firstName')?.invalid && registrationForm.get('firstName')?.touched"
+        [class.is-valid]="registrationForm.get('firstName')?.valid && registrationForm.get('firstName')?.touched"
+      />
+      <div class="invalid-feedback">First Name is required.</div>
+    </div>
+
+    <!-- Last Name -->
+    <div class="form-group">
+      <input
+        type="text"
+        class="form-control"
+        id="lastName"
+        formControlName="lastName"
+        placeholder="Last Name"
+        [class.is-invalid]="registrationForm.get('lastName')?.invalid && registrationForm.get('lastName')?.touched"
+        [class.is-valid]="registrationForm.get('lastName')?.valid && registrationForm.get('lastName')?.touched"
+      />
+      <div class="invalid-feedback">Last Name is required.</div>
+    </div>
+
+    <!-- Email -->
+    <div class="form-group">
+      <input
+        type="email"
+        class="form-control"
+        id="email"
+        formControlName="email"
+        placeholder="Email"
+        [class.is-invalid]="registrationForm.get('email')?.invalid && registrationForm.get('email')?.touched"
+        [class.is-valid]="registrationForm.get('email')?.valid && registrationForm.get('email')?.touched"
+      />
+      <div class="invalid-feedback">Please provide a valid email address.</div>
+    </div>
+
+    <!-- Password -->
+    <div class="form-group">
+      <input
+        type="password"
+        class="form-control"
+        id="password"
+        formControlName="password"
+        placeholder="Password"
+        [class.is-invalid]="registrationForm.get('password')?.invalid && registrationForm.get('password')?.touched"
+        [class.is-valid]="registrationForm.get('password')?.valid && registrationForm.get('password')?.touched"
+      />
+      <div class="invalid-feedback">
+        Password must be at least 6 characters long.
+      </div>
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="form-group">
+      <input
+        type="password"
+        class="form-control"
+        id="confirmPassword"
+        formControlName="confirmPassword"
+        placeholder="Confirm Password"
+        [class.is-invalid]="registrationForm.hasError('passwordMismatch') && registrationForm.get('confirmPassword')?.touched"
+        [class.is-valid]="!registrationForm.hasError('passwordMismatch') && registrationForm.get('confirmPassword')?.touched"
+      />
+      <div class="invalid-feedback">Passwords must match.</div>
+    </div>
+
+    <!-- Job Selection -->
+    <div class="form-group">
+      <select
+        *ngIf="jobOptions && jobOptions.length > 0"
+        class="form-control"
+        id="jobId"
+        formControlName="jobId"
+        [class.is-invalid]="registrationForm.get('jobId')?.invalid && registrationForm.get('jobId')?.touched"
+        [class.is-valid]="registrationForm.get('jobId')?.valid && registrationForm.get('jobId')?.touched"
+      >
+        <option value="0" disabled>Select a Job</option>
+        <option *ngFor="let job of jobOptions" [value]="job.id">
+          {{ job.title }}
+        </option>
+      </select>
+      <div class="invalid-feedback">Please select a job.</div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary" [disabled]="registrationForm.invalid">
+      Register
+    </button>
+
+    <!-- Login Link -->
+    <p>
+      Already have an account? <a [routerLink]="['/login']">Login</a>
+    </p>
+  </form>
 </div>
