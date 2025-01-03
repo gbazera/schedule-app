@@ -45,9 +45,8 @@ export class RegistrationComponent {
     if (this.registrationForm.valid) {
       const { confirmPassword, jobId, ...userData } =
         this.registrationForm.value;
-      const job = jobId as Job;
 
-      this.userService.registerUser({ ...userData, jobId: job.id }).subscribe({
+      this.userService.registerUser({ ...userData, jobId }).subscribe({
         next: (response: any) => {
           console.log('registration successful: ', response);
           this.router.navigate(['/login']);
