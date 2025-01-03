@@ -1,1 +1,36 @@
-<p>schedule works!</p>
+<div class="container">
+  <h1 class="text-center">Worker Schedule</h1>
+  <div class="d-flex justify-content-between mb-3">
+    <button class="btn btn-primary" (click)="previousWeek()">
+      Previous Week
+    </button>
+    <h3>Week of {{ formatWeekForDisplay() }}</h3>
+    <button class="btn btn-primary" (click)="nextWeek()">Next Week</button>
+  </div>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th></th>
+        <th *ngFor="let day of weekDays" class="text-center">
+          <div class="weekday-name">{{ getDayName(day) }}</div> 
+        </th>
+      </tr>
+      <tr>
+        <th></th>
+        <th *ngFor="let day of weekDays" class="text-center">
+          <div class="day-number">{{ formatDateForDisplay(day) }}</div>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let job of jobOptions">
+        <th class="text-center" >{{job.title}}</th>
+        <td *ngFor="let day of weekDays" class="text-center">
+          <div *ngFor="let shift of getShiftsForDateAndRole(day, job.id)" class="shift" [attr.data-shift-type]="determineShift(shift.startTime)">
+            {{ determineShift(shift.startTime) }} - {{ shift.firstName + ' ' + shift.lastName }}
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -33,4 +33,5 @@ export class UserService {
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
+  
 }
