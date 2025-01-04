@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Job } from '../interfaces/job';
 import { Observable } from 'rxjs';
+import { JwtHelperService } from '@auth0/angular-jwt';
 
 @Injectable({
   providedIn: 'root'
@@ -34,4 +35,10 @@ export class UserService {
     this.router.navigate(['/login']);
   }
   
+  public isAuthenticated() : boolean {
+    const token = localStorage.getItem('token');
+    const helper = new JwtHelperService();
+    const isExpired = helper.isTokenExpired(token);
+    return !isExpired;
+  }
 }

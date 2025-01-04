@@ -12,7 +12,7 @@
       <tr>
         <th></th>
         <th *ngFor="let day of weekDays" class="text-center">
-          <div class="weekday-name">{{ getDayName(day) }}</div> 
+          <div class="weekday-name">{{ getDayName(day) }}</div>
         </th>
       </tr>
       <tr>
@@ -24,13 +24,61 @@
     </thead>
     <tbody>
       <tr *ngFor="let job of jobOptions">
-        <th class="text-center" >{{job.title}}</th>
+        <th class="text-center">{{ job.title }}</th>
         <td *ngFor="let day of weekDays" class="text-center">
-          <div *ngFor="let shift of getShiftsForDateAndRole(day, job.id)" class="shift" [attr.data-shift-type]="determineShift(shift.startTime)">
-            {{ determineShift(shift.startTime) }} - {{ shift.firstName + ' ' + shift.lastName }}
+          <div
+            *ngFor="let shift of getShiftsForDateAndRole(day, job.id)"
+            class="shift"
+            [attr.data-shift-type]="determineShift(shift.startTime)"
+          >
+            {{ determineShift(shift.startTime) }} -
+            {{ shift.firstName + " " + shift.lastName }}
           </div>
         </td>
       </tr>
     </tbody>
   </table>
+  <p class="text-center">
+    You are {{ getRoleFromToken() == 1 ? "an Admin" : "a Worker" }}
+  </p>
+  <div *ngIf="getRoleFromToken() == 2" style="width: 500px; margin: auto;">
+    <form class="form" [formGroup]="scheduleForm">  
+      <div class="form-group">
+        <label for="shiftDate">Select Date:</label>
+        <input
+          type="date"
+          id="shiftDate"
+          class="form-control"
+          formControlName="shiftDate"
+          name="shiftDate"
+          required
+        />
+      </div>
+      <br>
+      <div class="form-group">
+        <label for="shiftType">Select Shift:</label>
+        <select
+          id="shiftType"
+          class="form-control"
+          formControlName="shiftType"
+          name="shiftType"
+          required
+        >
+          <option value="morning">Morning</option>
+          <option value="evening">Evening</option>
+        </select>
+      </div>
+      <br>
+      <button type="button" class="btn btn-success" (click)="addScheduleRequest()">
+        Add Schedule
+      </button>
+      <br>
+      <div *ngIf="successMessage" class="alert alert-success mt-3">
+        {{ successMessage }}
+      </div>
+      <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+        {{ errorMessage }}
+      </div>      
+    </form>
+  </div>
 </div>

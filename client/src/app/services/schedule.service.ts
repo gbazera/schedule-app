@@ -15,6 +15,7 @@ export class ScheduleService {
   }
 
   addScheduleRequest(scheduleRequest: any): Observable<any> {
+    console.log('scheduleRequest:', scheduleRequest);
     return this.http.post(`${this.apiUrl}/add-schedule-request`, scheduleRequest);
   }
   

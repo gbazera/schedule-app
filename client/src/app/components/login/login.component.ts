@@ -40,19 +40,15 @@ export class LoginComponent {
 
           const decodedToken= this.decodeToken(jwtToken);
           const role= decodedToken?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
-          // this.router.navigate(['/worker']);
 
-          if(role==='1'){
-            this.router.navigate(['/schedule']);
-          }else if(role=== '2'){
-            this.router.navigate(['/schedule']);
-          }
-          else{
-            console.log('Login failed. Please check your credentials', 'Error');
-          }
+          if(role == 1) console.log('Admin login successful');
+          else if(role == 2) console.log('Worker login successful');
+
+          if(role) this.router.navigate(['/schedule']);
+          else console.log('Login failed. Please check your credentials', 'Error');
         },
         error:(error) =>{
-          console.log('login failed: ',error);
+          console.log('login failed: ', error);
         }
       })
     }

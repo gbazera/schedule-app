@@ -1,19 +1,28 @@
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ScheduleService } from 'src/app/services/schedule.service';
 import { UserService } from 'src/app/services/user.service';
 
 @Component({
   selector: 'app-schedule',
   templateUrl: './schedule.component.html',
-  styleUrls: ['./schedule.component.css']
+  styleUrls: ['./schedule.component.css'],
 })
 export class ScheduleComponent {
   jobOptions: any[] = [];
   scheduleData: any[] = [];
   weekDays: Date[] = [];
   currentWeekStart: Date;
+  scheduleForm!: FormGroup;
+  successMessage: string | null = null;
+  errorMessage: string | null = null;
 
-  constructor(private scheduleService: ScheduleService, private userService: UserService) {
+
+  constructor(
+    private fb: FormBuilder,
+    private scheduleService: ScheduleService,
+    private userService: UserService
+  ) {
     this.fetchJobOptions;
     this.currentWeekStart = this.getStartOfWeek(new Date());
     this.generateWeek();
@@ -22,6 +31,14 @@ export class ScheduleComponent {
 
   ngOnInit(): void {
     this.loadSchedule();
+    this.createNewScheduleForm();
+  }
+
+  createNewScheduleForm(): void {
+    this.scheduleForm = this.fb.group({
+      shiftDate: [null, Validators.required],
+      shiftType: [0, Validators.required],
+    });
   }
 
   fetchJobOptions(): void {
@@ -62,34 +79,62 @@ export class ScheduleComponent {
   }
 
   formatDateForDisplay(date: Date): string {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return `${monthNames[date.getMonth()]} ${date.getDate()}`;
   }
 
   formatWeekForDisplay(): string {
-        const startOfWeek = this.getStartOfWeek(new Date(this.currentWeekStart));
-        const endOfWeek = this.addDays(new Date(startOfWeek), 6);
+    const startOfWeek = this.getStartOfWeek(new Date(this.currentWeekStart));
+    const endOfWeek = this.addDays(new Date(startOfWeek), 6);
 
-        if (startOfWeek.getMonth() !== endOfWeek.getMonth()) {
-            return `${this.formatDateForDisplay(startOfWeek)} - ${this.formatDateForDisplay(endOfWeek)}`;
-        } else {
-            return `${this.getMonthName(startOfWeek)} ${this.getDayNumber(startOfWeek)} - ${this.getDayNumber(endOfWeek)}`;
-        }
+    if (startOfWeek.getMonth() !== endOfWeek.getMonth()) {
+      return `${this.formatDateForDisplay(
+        startOfWeek
+      )} - ${this.formatDateForDisplay(endOfWeek)}`;
+    } else {
+      return `${this.getMonthName(startOfWeek)} ${this.getDayNumber(
+        startOfWeek
+      )} - ${this.getDayNumber(endOfWeek)}`;
     }
+  }
 
-    getMonthName(date: Date): string {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-      ];
-      return monthNames[date.getMonth()];
-        }
-    getDayNumber(date: Date): number {
-        return date.getDate();
-      }
-    getDayName(date: Date): string {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        return days[date.getDay()];
-      }
+  getMonthName(date: Date): string {
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return monthNames[date.getMonth()];
+  }
+  getDayNumber(date: Date): number {
+    return date.getDate();
+  }
+  getDayName(date: Date): string {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days[date.getDay()];
+  }
 
   generateWeek() {
     this.weekDays = [];
@@ -113,15 +158,89 @@ export class ScheduleComponent {
 
     if (startHour >= 6 && startHour < 12) return 'Morning';
     else return 'Evening';
-}
+  }
 
   getShiftsForDateAndRole(date: Date, role: string): any[] {
     const dateStr = this.formatDate(date);
-    return this.scheduleData.filter(shift => {
+    return this.scheduleData.filter((shift) => {
       const shiftStartDate = new Date(shift.startTime);
-      return this.formatDate(shiftStartDate) === dateStr && shift.jobId === role;
+      return (
+        this.formatDate(shiftStartDate) === dateStr && shift.jobId === role && shift.isApproved
+      );
     });
   }
 
+  addScheduleRequest(): void {
+    if (this.scheduleForm.invalid) {
+      console.error('Form is invalid');
+      this.errorMessage = 'Please fill out all fields before submitting.';
+      this.successMessage = null;
 
+      setTimeout(() => {
+        this.errorMessage = null;
+      }, 5000);
+      return;
+    }
+
+    const startTime = new Date(this.scheduleForm.value.shiftDate);
+    startTime.setUTCHours(this.scheduleForm.value.shiftType === 'morning' ? 8 : 16, 0, 0, 0);
+    const endTime = new Date(startTime);
+    endTime.setUTCHours(startTime.getUTCHours() + 8);
+    console.log('start time:', startTime.toISOString());
+    console.log('end time:', endTime.toISOString());
+
+    const scheduleRequest = {
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      userId: this.getUserIdFromToken(),
+    };
+
+    this.scheduleService.addScheduleRequest(scheduleRequest).subscribe({
+    next: (response) => {
+      console.log('Schedule request added:', response);
+      this.successMessage = 'Schedule request added successfully!';
+      this.errorMessage = null;
+      this.loadSchedule();
+      this.scheduleForm.reset();
+
+      setTimeout(() => {
+        this.successMessage = null;
+      }, 5000);
+    },
+    error: (error) => {
+      console.error('Error adding schedule request:', error);
+      this.errorMessage = 'Failed to add schedule request. Please try again.';
+      this.successMessage = null;
+
+      setTimeout(() => {
+        this.errorMessage = null;
+      }, 5000);
+    },
+  });
+  }
+
+  getRoleFromToken(): number {
+    const token = localStorage.getItem('token');
+    const decodedToken = token ? this.decodeToken(token) : null;
+    return decodedToken?.[
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+    ];
+  }
+
+  getUserIdFromToken(): number {
+    const token = localStorage.getItem('token');
+    const decodedToken = token ? this.decodeToken(token) : null;
+    return decodedToken?.[
+      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+    ];
+  }
+
+  private decodeToken(token: string): any {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      console.error('Error decoding JWT token', e);
+      return null;
+    }
+  }
 }
