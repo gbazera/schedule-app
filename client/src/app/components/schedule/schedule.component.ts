@@ -111,30 +111,49 @@ export class ScheduleComponent {
     }
   }
 
-  getMonthName(date: Date): string {
+  getMonthName(dateInput: Date | string): string {
     const monthNames = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateInput);
+      return 'Invalid Date';
+    }
     return monthNames[date.getMonth()];
+  } 
+
+  determineShift(startTime: string): string {
+    const startHour = new Date(startTime).getHours();
+
+    if (startHour >= 6 && startHour < 12) return 'Morning';
+    else return 'Evening';
   }
-  getDayNumber(date: Date): number {
+
+  getDayNumber(dateInput: Date | string): number {
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateInput);
+      return NaN;
+    }
     return date.getDate();
-  }
-  getDayName(date: Date): string {
+  }  
+
+  getDayName(dateInput: Date | string): string {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const date = new Date(dateInput);
     return days[date.getDay()];
   }
+
+  getYear(dateInput: Date | string): number {
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) {
+    console.error('Invalid date:', dateInput);
+    return NaN;
+  }
+  return date.getFullYear();
+}
 
   generateWeek() {
     this.weekDays = [];
@@ -153,13 +172,6 @@ export class ScheduleComponent {
     this.generateWeek();
   }
 
-  determineShift(startTime: string): string {
-    const startHour = new Date(startTime).getHours();
-
-    if (startHour >= 6 && startHour < 12) return 'Morning';
-    else return 'Evening';
-  }
-
   getShiftsForDateAndRole(date: Date, role: string): any[] {
     const dateStr = this.formatDate(date);
     return this.scheduleData.filter((shift) => {
@@ -167,6 +179,13 @@ export class ScheduleComponent {
       return (
         this.formatDate(shiftStartDate) === dateStr && shift.jobId === role && shift.isApproved
       );
+    });
+  }
+
+  getUnapprovedShifts(): any[] {
+    return this.scheduleData.filter((shift) => {
+      const shiftStartDate = new Date(shift.startTime);
+      return !shift.isApproved;
     });
   }
 
@@ -217,6 +236,54 @@ export class ScheduleComponent {
       }, 5000);
     },
   });
+  }
+
+  approveScheduleRequest(id: number): void {
+    this.scheduleService.approveScheduleRequest(id).subscribe({
+      next: (response) => {
+        console.log('Schedule request approved:', response);
+        this.successMessage = 'Schedule request approved successfully!';
+        this.errorMessage = null;
+        this.loadSchedule();
+
+        setTimeout(() => {
+          this.successMessage = null;
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error approving schedule request:', error);
+        this.errorMessage = 'Failed to approve schedule request. Please try again.';
+        this.successMessage = null;
+
+        setTimeout(() => {
+          this.errorMessage = null;
+        }, 5000);
+      },
+    })
+  }
+
+  deleteSchedule(id: number): void {
+    this.scheduleService.deleteSchedule(id).subscribe({
+      next: (response) => {
+        console.log('Schedule deleted:', response);
+        this.successMessage = 'Schedule deleted successfully!';
+        this.errorMessage = null;
+        this.loadSchedule();
+
+        setTimeout(() => {
+          this.successMessage = null;
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error deleting schedule request:', error);
+        this.errorMessage = 'Failed to delete schedule request. Please try again.';
+        this.successMessage = null;
+
+        setTimeout(() => {
+          this.errorMessage = null;
+        }, 5000);
+      },
+    })
   }
 
   getRoleFromToken(): number {
