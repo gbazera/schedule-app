@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { JobService } from 'src/app/services/job.service';
 import { ScheduleService } from 'src/app/services/schedule.service';
 import { UserService } from 'src/app/services/user.service';
 
@@ -9,24 +10,28 @@ import { UserService } from 'src/app/services/user.service';
   styleUrls: ['./schedule.component.css'],
 })
 export class ScheduleComponent {
-  jobOptions: any[] = [];
+  jobs: any[] = [];
+  users: any[] = [];
   scheduleData: any[] = [];
   weekDays: Date[] = [];
   currentWeekStart: Date;
   scheduleForm!: FormGroup;
   successMessage: string | null = null;
   errorMessage: string | null = null;
-
+  newJob: string = '';
 
   constructor(
     private fb: FormBuilder,
     private scheduleService: ScheduleService,
-    private userService: UserService
+    private userService: UserService,
+    private jobService: JobService
   ) {
-    this.fetchJobOptions;
+    this.fetchJobs;
+    this.fetchUsers;
     this.currentWeekStart = this.getStartOfWeek(new Date());
     this.generateWeek();
-    this.fetchJobOptions();
+    this.fetchJobs();
+    this.fetchUsers();
   }
 
   ngOnInit(): void {
@@ -41,14 +46,146 @@ export class ScheduleComponent {
     });
   }
 
-  fetchJobOptions(): void {
-    this.userService.getJobOptions().subscribe({
+  fetchJobs(): void {
+    this.jobService.getJobs().subscribe({
       next: (response) => {
         console.log('job options:', response);
-        this.jobOptions = response;
+        this.jobs = response;
       },
       error: (error) => {
         console.error('error fetching job options:', error);
+      },
+    });
+  }
+
+  addJob(): void {
+    if (this.newJob.trim() === '') {
+      console.error('Job is invalid');
+      this.errorMessage = 'Please type in the job title before submitting.';
+      this.successMessage = null;
+
+      setTimeout(() => {
+        this.errorMessage = null;
+      }, 5000);
+      return;
+    }
+
+    const job = {
+      title: this.newJob.trim(),
+    };
+
+    this.jobService.addJob(job).subscribe({
+      next: (response) => {
+        console.log('Job added:', response);
+        this.successMessage = 'Job added successfully!';
+        this.errorMessage = null;
+        this.fetchJobs();
+        this.newJob = '';
+
+        setTimeout(() => {
+          this.successMessage = null;
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error adding a job:', error);
+        this.errorMessage = 'Failed to add a job. Please try again.';
+        this.successMessage = null;
+
+        setTimeout(() => {
+          this.errorMessage = null;
+        }, 5000);
+      },
+    });
+  }
+
+  deleteJob(id: number): void {
+    this.jobService.deleteJob(id).subscribe({
+      next: (response) => {
+        console.log('Job deleted:', response);
+        this.successMessage = 'Job deleted successfully!';
+        this.errorMessage = null;
+        this.fetchJobs();
+
+        setTimeout(() => {
+          this.successMessage = null;
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error deleting a job:', error);
+        this.errorMessage = 'Failed to delete a job. Please try again.';
+        this.successMessage = null;
+
+        setTimeout(() => {
+          this.errorMessage = null;
+        }, 5000);
+      },
+    });
+  }
+
+  fetchUsers(): void {
+    this.userService.getUsers().subscribe({
+      next: (response) => {
+        console.log('users:', response);
+        this.users = response;
+      },
+      error: (error) => {
+        console.error('error fetching users:', error);
+      },
+    });
+  }
+
+  changeUserRole(userId: number, event: Event): void {
+
+    const newRoleId = (event.target as HTMLSelectElement).value;
+
+    const req = {
+      userId,
+      newRoleId
+    };
+
+    this.userService.changeUserRole(req).subscribe({
+      next: (response) => {
+        console.log('User role changed:', response);
+        this.successMessage = 'User role changed successfully!';
+        this.errorMessage = null;
+        this.fetchUsers();
+
+        setTimeout(() => {
+          this.successMessage = null;
+        }, 5000);
+      },
+      error: (error) => {
+        console.error(`Error changing user's role:`, error);
+        this.errorMessage = `Failed to change user's role. Please try again.`;
+        this.successMessage = null;
+
+        setTimeout(() => {
+          this.errorMessage = null;
+        }, 5000);
+      },
+    });
+  }
+
+  deleteUser(id: number): void {
+    this.userService.deleteUser(id).subscribe({
+      next: (response) => {
+        console.log('User deleted:', response);
+        this.successMessage = 'User deleted successfully!';
+        this.errorMessage = null;
+        this.fetchUsers();
+
+        setTimeout(() => {
+          this.successMessage = null;
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error deleting a user:', error);
+        this.errorMessage = 'Failed to delete a user. Please try again.';
+        this.successMessage = null;
+
+        setTimeout(() => {
+          this.errorMessage = null;
+        }, 5000);
       },
     });
   }
@@ -113,8 +250,18 @@ export class ScheduleComponent {
 
   getMonthName(dateInput: Date | string): string {
     const monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) {
@@ -122,7 +269,7 @@ export class ScheduleComponent {
       return 'Invalid Date';
     }
     return monthNames[date.getMonth()];
-  } 
+  }
 
   determineShift(startTime: string): string {
     const startHour = new Date(startTime).getHours();
@@ -138,7 +285,7 @@ export class ScheduleComponent {
       return NaN;
     }
     return date.getDate();
-  }  
+  }
 
   getDayName(dateInput: Date | string): string {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -147,13 +294,13 @@ export class ScheduleComponent {
   }
 
   getYear(dateInput: Date | string): number {
-  const date = new Date(dateInput);
-  if (isNaN(date.getTime())) {
-    console.error('Invalid date:', dateInput);
-    return NaN;
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateInput);
+      return NaN;
+    }
+    return date.getFullYear();
   }
-  return date.getFullYear();
-}
 
   generateWeek() {
     this.weekDays = [];
@@ -177,7 +324,9 @@ export class ScheduleComponent {
     return this.scheduleData.filter((shift) => {
       const shiftStartDate = new Date(shift.startTime);
       return (
-        this.formatDate(shiftStartDate) === dateStr && shift.jobId === role && shift.isApproved
+        this.formatDate(shiftStartDate) === dateStr &&
+        shift.jobId === role &&
+        shift.isApproved
       );
     });
   }
@@ -202,7 +351,12 @@ export class ScheduleComponent {
     }
 
     const startTime = new Date(this.scheduleForm.value.shiftDate);
-    startTime.setUTCHours(this.scheduleForm.value.shiftType === 'morning' ? 8 : 16, 0, 0, 0);
+    startTime.setUTCHours(
+      this.scheduleForm.value.shiftType === 'morning' ? 8 : 16,
+      0,
+      0,
+      0
+    );
     const endTime = new Date(startTime);
     endTime.setUTCHours(startTime.getUTCHours() + 8);
     console.log('start time:', startTime.toISOString());
@@ -215,27 +369,27 @@ export class ScheduleComponent {
     };
 
     this.scheduleService.addScheduleRequest(scheduleRequest).subscribe({
-    next: (response) => {
-      console.log('Schedule request added:', response);
-      this.successMessage = 'Schedule request added successfully!';
-      this.errorMessage = null;
-      this.loadSchedule();
-      this.scheduleForm.reset();
-
-      setTimeout(() => {
-        this.successMessage = null;
-      }, 5000);
-    },
-    error: (error) => {
-      console.error('Error adding schedule request:', error);
-      this.errorMessage = 'Failed to add schedule request. Please try again.';
-      this.successMessage = null;
-
-      setTimeout(() => {
+      next: (response) => {
+        console.log('Schedule request added:', response);
+        this.successMessage = 'Schedule request added successfully!';
         this.errorMessage = null;
-      }, 5000);
-    },
-  });
+        this.loadSchedule();
+        this.scheduleForm.reset();
+
+        setTimeout(() => {
+          this.successMessage = null;
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error adding schedule request:', error);
+        this.errorMessage = 'Failed to add schedule request. Please try again.';
+        this.successMessage = null;
+
+        setTimeout(() => {
+          this.errorMessage = null;
+        }, 5000);
+      },
+    });
   }
 
   approveScheduleRequest(id: number): void {
@@ -252,14 +406,15 @@ export class ScheduleComponent {
       },
       error: (error) => {
         console.error('Error approving schedule request:', error);
-        this.errorMessage = 'Failed to approve schedule request. Please try again.';
+        this.errorMessage =
+          'Failed to approve schedule request. Please try again.';
         this.successMessage = null;
 
         setTimeout(() => {
           this.errorMessage = null;
         }, 5000);
       },
-    })
+    });
   }
 
   deleteSchedule(id: number): void {
@@ -276,14 +431,15 @@ export class ScheduleComponent {
       },
       error: (error) => {
         console.error('Error deleting schedule request:', error);
-        this.errorMessage = 'Failed to delete schedule request. Please try again.';
+        this.errorMessage =
+          'Failed to delete schedule request. Please try again.';
         this.successMessage = null;
 
         setTimeout(() => {
           this.errorMessage = null;
         }, 5000);
       },
-    })
+    });
   }
 
   getRoleFromToken(): number {

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UserService } from 'src/app/services/user.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -15,7 +15,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private userService: UserService
+    private authService: AuthService
   ) {};
 
   ngOnInit(): void {
@@ -32,7 +32,7 @@ export class LoginComponent {
   login(): void {
     if(this.loginForm.valid){
       const userData = this.loginForm.value;
-      this.userService.loginUser(userData).subscribe({
+      this.authService.loginUser(userData).subscribe({
         next:(response: any) => {
           console.log('logged in successfully: ',response);
           const jwtToken = response;

@@ -10,35 +10,23 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 })
 export class UserService {
 
-  private apiUrl = 'https://localhost:44330/api/User';
+  private userUrl = 'https://localhost:44330/api/User';
+  private adminUrl = 'https://localhost:44330/api/Admin';
 
   constructor(
     private http: HttpClient,
     private router: Router
   ) {}
 
-  getJobOptions(): Observable<Job[]> {
-    return this.http.get<Job[]>(`${this.apiUrl}/jobs`);
+  getUsers(): Observable<Job[]> {
+    return this.http.get<Job[]>(`${this.userUrl}/users`);
   }
 
-  registerUser(userData: any): Observable<any>{
-    return this.http.post(`${this.apiUrl}/register`, userData);
+  deleteUser(id: number): Observable<any> {
+    return this.http.delete(`${this.adminUrl}/delete-user/${id}`);
   }
 
-  loginUser(userData: any): Observable<any>{
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
-    return this.http.post(`${this.apiUrl}/login`, userData, {headers, responseType: 'text' as 'json'});
-  }
-  
-  logoutUser(): void{
-    localStorage.removeItem('token');
-    this.router.navigate(['/login']);
-  }
-  
-  public isAuthenticated() : boolean {
-    const token = localStorage.getItem('token');
-    const helper = new JwtHelperService();
-    const isExpired = helper.isTokenExpired(token);
-    return !isExpired;
+  changeUserRole(req: any): Observable<any> {
+    return this.http.post(`${this.adminUrl}/change-user-role`, req);
   }
 }

@@ -3,7 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { passwordMatchValidator } from '../validators/passwordMatch.Validator';
 import { Job } from 'src/app/interfaces/job';
-import { UserService } from 'src/app/services/user.service';
+import { JobService } from 'src/app/services/job.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-registration',
@@ -16,7 +17,8 @@ export class RegistrationComponent {
 
   constructor(
     private fb: FormBuilder,
-    private userService: UserService,
+    private authService: AuthService,
+    private jobService: JobService,
     private router: Router
   ) {}
 
@@ -46,7 +48,7 @@ export class RegistrationComponent {
       const { confirmPassword, jobId, ...userData } =
         this.registrationForm.value;
 
-      this.userService.registerUser({ ...userData, jobId }).subscribe({
+      this.authService.registerUser({ ...userData, jobId }).subscribe({
         next: (response: any) => {
           console.log('registration successful: ', response);
           this.router.navigate(['/login']);
@@ -59,7 +61,7 @@ export class RegistrationComponent {
   }
 
   fetchJobOptions(): void {
-    this.userService.getJobOptions().subscribe({
+    this.jobService.getJobs().subscribe({
       next: (response) => {
         console.log('job options:', response);
         this.jobOptions = response;

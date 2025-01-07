@@ -23,17 +23,17 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let job of jobOptions">
+      <tr *ngFor="let job of jobs">
         <th class="text-center">{{ job.title }}</th>
         <td *ngFor="let day of weekDays" class="text-center">
           <div
             *ngFor="let shift of getShiftsForDateAndRole(day, job.id)"
-            class="shift"
+            class="shift d-grid gap-2"
             [attr.data-shift-type]="determineShift(shift.startTime)"
           >
             {{ determineShift(shift.startTime) }} -
             {{ shift.firstName + " " + shift.lastName }}
-            <a *ngIf="getRoleFromToken() == 1" class="link-danger" (click)="deleteSchedule(shift.id)">Delete</a>
+            <button *ngIf="getRoleFromToken() == 1" class="btn btn-danger btn-sm" (click)="deleteSchedule(shift.id)">Delete</button>
           </div>
         </td>
       </tr>
@@ -75,25 +75,85 @@
       </button>
     </form>
   </div>
-  <div *ngIf="getRoleFromToken() == 1" style="width: 600px; margin: auto;">
-    <div class="container mt-4 mb-5">
-      <h3 class="text-center">Schedule Requests</h3>
-      <br>
-      <ul class="list-group">
-        <li *ngFor="let shift of getUnapprovedShifts()" class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <strong>Worker:</strong> {{ shift.firstName + " " + shift.lastName }} <br>
-            <strong>Request:</strong> {{ determineShift(shift.startTime) }} Shift on {{ getMonthName(shift.startTime) }} {{ getDayNumber(shift.startTime) }}, 2025
+  <div *ngIf="getRoleFromToken() == 1" class="admin-panel mb-5">
+    <h4 class="text-center mb-4">Admin Panel</h4>
+    <div class="container d-flex align-items-start">
+      <div class="nav nav-pills flex-column me-3" id="admin-tabs" role="tablist" aria-orientation="vertical" style="width: 280px;">
+        <a class="nav-link active" data-bs-toggle="pill" data-bs-target="#admin-tabs-schedule-requests">
+          <i class="bi bi-calendar2-check-fill"></i> Schedule Requests
+        </a>
+        <a class="nav-link" data-bs-toggle="pill" data-bs-target="#admin-tabs-jobs">
+          <i class="bi bi-briefcase-fill"></i> Jobs
+        </a>
+        <a class="nav-link" data-bs-toggle="pill" data-bs-target="#admin-tabs-users">
+          <i class="bi bi-people-fill"></i> Users
+        </a>
+      </div>
+      <div class="tab-content flex-fill" id="admin-tabsContent">
+        <div class="tab-pane fade show active" id="admin-tabs-schedule-requests" role="tabpanel" aria-labelledby="admin-tabs-schedule-requests-tab">
+          <ul class="list-group">
+            <li *ngFor="let shift of getUnapprovedShifts()" class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong>Worker:</strong> {{ shift.firstName + " " + shift.lastName }} <br>
+                <strong>Request:</strong> {{ determineShift(shift.startTime) }} Shift on {{ getMonthName(shift.startTime) }} {{ getDayNumber(shift.startTime) }}, 2025
+              </div>
+              <div>
+                <button class="btn btn-success btn-sm me-2" (click)="approveScheduleRequest(shift.id)">Approve</button>
+                <button class="btn btn-danger btn-sm" (click)="deleteSchedule(shift.id)">Decline</button>
+              </div>
+            </li>
+            <li *ngIf="getUnapprovedShifts().length === 0" class="list-group-item text-center">
+              No requests at the moment.
+            </li>
+          </ul>
+        </div>
+        <div class="tab-pane fade" id="admin-tabs-jobs" role="tabpanel" aria-labelledby="admin-tabs-jobs-tab">
+          <ul class="list-group">
+            <li *ngFor="let job of jobs" class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                {{ job.title }}
+              </div>
+              <div>
+                <button class="btn btn-danger btn-sm" (click)="deleteJob(job.id)">Delete</button>
+              </div>
+            </li>
+            <li *ngIf="jobs.length === 0" class="list-group-item text-center">
+              No jobs at the moment.
+            </li>
+          </ul>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div style="width: 100%; margin-right: 10px;">
+              <input type="text" class="form-control form-control" placeholder="Add a new job" [(ngModel)]="newJob">
+            </div>
+            <div>
+              <button class="btn btn-success" (click)="addJob()">Add</button>
+            </div>
           </div>
-          <div>
-            <button class="btn btn-success btn-sm me-2" (click)="approveScheduleRequest(shift.id)">Approve</button>
-            <button class="btn btn-danger btn-sm" (click)="deleteSchedule(shift.id)">Decline</button>
-          </div>
-        </li>
-        <li *ngIf="getUnapprovedShifts().length === 0" class="list-group-item text-center">
-          No requests at the moment.
-        </li>
-      </ul>
+        </div>
+        <div class="tab-pane fade" id="admin-tabs-users" role="tabpanel" aria-labelledby="admin-tabs-users-tab">
+          <ul class="list-group">
+            <li *ngFor="let user of users" class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                {{ user.firstName }} {{ user.lastName }}
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <select *ngIf="user.roleId == 1" class="form-select" id="roleId" (change)="changeUserRole(user.id, $event)">
+                  <option value="1" selected>Admin</option>
+                  <option value="2">Worker</option>
+                </select>
+                <select *ngIf="user.roleId == 2" class="form-select" id="roleId"  (change)="changeUserRole(user.id, $event)">
+                  <option value="1">Admin</option>
+                  <option value="2" selected>Worker</option>
+                </select>
+                <button class="btn btn-danger btn-sm" (click)="deleteUser(user.id)">Delete</button>
+              </div>
+            </li>
+            <li *ngIf="jobs.length === 0" class="list-group-item text-center">
+              No Users at the moment.
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
   <div *ngIf="successMessage" class="alert alert-success mt-3">
