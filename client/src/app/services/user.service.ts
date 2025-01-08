@@ -18,8 +18,8 @@ export class UserService {
     private router: Router
   ) {}
 
-  getUsers(): Observable<Job[]> {
-    return this.http.get<Job[]>(`${this.userUrl}/users`);
+  getUsers(): Observable<any> {
+    return this.http.get<any>(`${this.userUrl}/users`);
   }
 
   deleteUser(id: number): Observable<any> {
